@@ -1,0 +1,136 @@
+
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>AgingWise Demo</title>
+</head>
+<body style="font-family:sans-serif;padding:20px;">
+
+<div style="display:flex;align-items:center;gap:10px;">
+  <img src="tsinghua_logo.jpg" height="60">
+  <h1 style="margin:0;">AgingWise 智能体原型演示（清华联合项目）</h1>
+</div>
+<hr>
+
+  <h1>AgingWise 智能体原型 Demo</h1>
+  <hr>
+  <h2>一、退休规划计算器</h2>
+  <form id="retirementForm">
+    Age: <input type="number" id="current_age"><br>
+    Retirement Age: <input type="number" id="retirement_age"><br>
+    Current Savings: <input type="number" id="current_savings"><br>
+    Monthly Contribution: <input type="number" id="monthly_contribution"><br>
+    Expected Annual Return (%): <input type="number" id="expected_return"><br>
+    <button type="submit">Calculate</button>
+  </form>
+  <div id="retirement_result"></div>
+
+  <h2>二、健康风险评估</h2>
+  <form id="healthForm">
+    Age: <input type="number" id="age"><br>
+    Hypertension: <input type="checkbox" id="has_hypertension"><br>
+    Diabetes: <input type="checkbox" id="has_diabetes"><br>
+    Smoker: <input type="checkbox" id="smokes"><br>
+    Exercises per week: <input type="number" id="exercises_per_week"><br>
+    <button type="submit">Check Risk</button>
+  </form>
+  <div id="health_result"></div>
+
+  <h2>三、金融防诈评估</h2>
+  <form id="fraudForm">
+    1. 银行卡+验证码请求: 
+    <input type="radio" name="q1" value="1">信 <input type="radio" name="q1" value="0">不信<br>
+    2. 家属/公安要求转账: 
+    <input type="radio" name="q2" value="1">信 <input type="radio" name="q2" value="0">不信<br>
+    3. 高颜值美女投资邀约:
+    <input type="radio" name="q3" value="1">信 <input type="radio" name="q3" value="0">不信<br>
+    4. 对方说出你银行卡和身份信息:
+    <input type="radio" name="q4" value="1">是 <input type="radio" name="q4" value="0">否<br>
+    <button type="submit">Check Risk</button>
+  </form>
+  <div id="fraud_result"></div>
+
+  <script>
+    // Retirement Calculator
+    document.getElementById('retirementForm').addEventListener('submit', function(e) {
+      e.preventDefault();
+      const data = {
+        current_age: document.getElementById('current_age').value,
+        retirement_age: document.getElementById('retirement_age').value,
+        current_savings: document.getElementById('current_savings').value,
+        monthly_contribution: document.getElementById('monthly_contribution').value,
+        expected_return: document.getElementById('expected_return').value
+      };
+      const result = simulateRetirement(data);
+      document.getElementById('retirement_result').innerHTML = `
+        <b>Total at Retirement:</b> $${result.total_at_retirement}<br>
+        <b>Estimated Monthly Income:</b> $${result.estimated_monthly_income}
+      `;
+    });
+    function simulateRetirement(d) {
+      let years = d.retirement_age - d.current_age;
+      let value = parseFloat(d.current_savings);
+      let monthly = parseFloat(d.monthly_contribution);
+      let rate = parseFloat(d.expected_return) / 100;
+      for (let i = 0; i < years; i++) {
+        value *= (1 + rate);
+        value += monthly * 12;
+      }
+      return {
+        total_at_retirement: value.toFixed(2),
+        estimated_monthly_income: (value / (20 * 12)).toFixed(2)
+      };
+    }
+
+    // Health Risk Assessment
+    document.getElementById('healthForm').addEventListener('submit', function(e) {
+      e.preventDefault();
+      const data = {
+        age: parseInt(document.getElementById('age').value),
+        has_hypertension: document.getElementById('has_hypertension').checked,
+        has_diabetes: document.getElementById('has_diabetes').checked,
+        smokes: document.getElementById('smokes').checked,
+        exercises_per_week: parseInt(document.getElementById('exercises_per_week').value)
+      };
+      const result = assessHealth(data);
+      document.getElementById('health_result').innerHTML = `
+        <b>Risk Level:</b> ${result.level}<br>
+        <b>Score:</b> ${result.score}<br>
+        <b>Advice:</b> ${result.advice}
+      `;
+    });
+    function assessHealth(d) {
+      let score = 0;
+      if (d.age >= 60) score += 2;
+      if (d.has_hypertension) score += 2;
+      if (d.has_diabetes) score += 2;
+      if (d.smokes) score += 2;
+      if (d.exercises_per_week >= 3) score -= 2;
+      else if (d.exercises_per_week == 0) score += 1;
+      let level = score <= 1 ? "低风险" : score <= 4 ? "中级风险" : "高风险";
+      let advice = level === "低风险" ? "继续保持良好生活习惯" :
+                   level === "中级风险" ? "增加运动，建议体检" :
+                   "请尽快体检并管理慢病";
+      return { score, level, advice };
+    }
+
+    // Fraud Risk
+    document.getElementById('fraudForm').addEventListener('submit', function(e) {
+      e.preventDefault();
+      const getValue = (name) => parseInt(document.querySelector(`input[name="${name}"]:checked`).value);
+      const responses = [getValue("q1"), getValue("q2"), getValue("q3"), getValue("q4")];
+      const score = responses.reduce((a,b)=>a+b,0);
+      let level = score <= 1 ? "低风险" : score <= 3 ? "中级风险" : "高风险";
+      let tips = level === "低风险" ? "继续保持警觉" :
+                 level === "中级风险" ? "建议加强防诈教育" :
+                 "请立即学习防诈课程";
+      document.getElementById('fraud_result').innerHTML = `
+        <b>Fraud Risk Level:</b> ${level}<br>
+        <b>Score:</b> ${score}<br>
+        <b>Tips:</b> ${tips}
+      `;
+    });
+  </script>
+</body>
+</html>
